@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.css">
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.js"></script>
+</head>
+<body>
+
+<div data-role="page" id="page_home">
+  <div data-role="header">
+    <h1>Poker Tourney Tracker</h1>
+    <a class="ui-btn ui-btn-right ui-icon-plus ui-btn-icon-left" href="#page_addplayer">Player</a>
+  </div>
+
+  <div data-role="main" class="ui-content">
+    <ol id="list_players" data-role="listview" data-inset="true">
+      
+    </ol>
+  </div>
+
+  <div data-role="footer" style="text-align: center;">
+    <a href="http://www.wsop.com/2013/" class="ui-btn">WSOP.com</a>
+  </div>
+</div>
+
+<div data-role="page" id="page_playerdetail">
+  <div data-role="header">
+    <a class="ui-btn ui-icon-plus ui-btn-icon-left" href="#page_home">Home</a>
+    <h1>PTT- Player Details</h1>
+    <a class="ui-btn ui-btn-right ui-icon-plus ui-btn-icon-left" href="#page_addplayer">Player</a>
+  </div>
+
+  <div data-role="main" class="ui-content">
+    <div id="player_detail">
+
+    </div>
+  </div>
+
+  <div data-role="footer" style="text-align: center;">
+    <a href="http://www.wsop.com/2013/" class="ui-btn">WSOP.com</a>
+  </div>
+</div>
+
+<div data-role="page" id="page_addplayer">
+  <div data-role="header">
+    <a class="ui-btn ui-icon-plus ui-btn-icon-left" href="#page_home">Home</a>
+    <h1>PTT- Add Player</h1>
+  </div>
+
+  <div data-role="main" class="ui-content">
+    <form id="form_addplayer" method="post" action="#addplayerform">
+      <label for="fullname">Player Name:</label>
+      <input type="text" name="fullname" id="fullname">
+      <label for="chipstack">Chipstack:</label>
+      <input type="text" name="chipstack" id="chipstack">
+      <label for="description">Description:</label>
+      <input type="text" name="description" id="description">
+      <input type="submit" name="submit" value="Submit">
+    </form>
+  </div>
+
+  <div data-role="footer" style="text-align: center;">
+    <a href="http://www.wsop.com/2013/" class="ui-btn">WSOP.com</a>
+  </div>
+</div>
+
+<script id="tpl_player" type="text/template">
+  <li data-uid="{{fullname}}">
+    <a href="#page_playerdetail" data-transition="slide">
+      {{fullname}} ({{chipstack}} chips)
+    </a>
+  </li>
+</script>
+
+<script id="tpl_playerdetail" type="text/template">
+  <h3>Fullname: {{fullname}}</h3>
+  <h5>Chipstack: {{chipstack}}</h5>
+  <p>Description: {{description}}</p>
+</script>
+
+
+<script type="text/javascript" src="js/TemplateRunner.js"></script>
+<script type="text/javascript" src="js/PokerTourneyModel.js"></script>
+<script type="text/javascript">
+  function resetForm($form) {
+    $form.find('input:text, input:password, input:file, select, textarea').val('');
+    $form.find('input:radio, input:checkbox').removeAttr('checked').removeAttr('selected');
+  }
+
+  $(document).on('pagebeforeshow', '#page_home', function(){
+    var players = PokerTourneyModel.getPlayers();
+    var sHtml = '';
+    for( var i = 0; i < players.length; i++) {
+      sHtml += TemplateRunner.renderTemplate('#tpl_player', players[i]);
+    }
+    $('#list_players').html(sHtml);
+    $('#list_players').listview('refresh');
+    $('#list_players li').on('click', function(event){
+      var uid = $(this).attr('data-uid');
+      var player = PokerTourneyModel.getPlayerByName(uid);
+      PokerTourneyModel.setCurrentPlayer(player);
+    });
+  });
+
+  $(document).on('pagebeforeshow', '#page_playerdetail', function(){
+    var tpl = TemplateRunner.renderTemplate('#tpl_playerdetail', PokerTourneyModel.getCurrentPlayer());
+    $('#player_detail').html(tpl);
+  });
+
+  $(document).on('pagebeforeshow', '#page_addplayer', function(){
+
+    $('#form_addplayer').submit(function(event){
+      event.preventDefault();
+
+      var fullname = $(this).find('[name=fullname]').val();
+      var chipstack = $(this).find('[name=chipstack]').val();
+      var description = $(this).find('[name=description]').val();
+
+      PokerTourneyModel.addPlayer({
+        fullname: fullname,
+        chipstack: chipstack,
+        description: description
+      });
+
+      resetForm($(this));
+
+      $.mobile.changePage("#page_home");
+    });
+  });
+</script>
+</body>
+</html>
